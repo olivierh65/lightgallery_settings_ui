@@ -1,0 +1,270 @@
+<?php
+
+/**
+ * @file
+ * Hooks and functions for lightgallery_settings_ui module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\lightgallery_settings_ui\Traits\LightGallerySettingsTrait;
+use Drupal\Core\Form\ConfigTarget;
+
+/**
+ * Implements hook_form_FORM_ID_alter() for lightgallery_settings_form.
+ */
+function lightgallery_settings_ui_form_lightgallery_settings_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Use the trait to build the settings form.
+  $trait_user = new class {
+    use LightGallerySettingsTrait;
+
+    // Rendre les méthodes protected accessibles
+    public function publicBuildCoreSettingsForm($definitions, $config, $parents) {
+      return $this->buildCoreSettingsForm($definitions, $config, $parents);
+    }
+
+    public function publicBuildPluginSettingsForm($definitions, $config, $parents) {
+      return $this->buildPluginSettingsForm($definitions, $config, $parents);
+    }
+
+    public function t($string, array $args = []) {
+      return t($string, $args);
+    }
+  };
+
+  $config = \Drupal::config('lightgallery_settings_ui.settings');
+  $definitions = $trait_user::getLightGalleryPluginDefinitions();
+
+  // Container parent pour isoler NOS settings avec vertical tabs
+  $form['lightgallery_settings_ui'] = [
+    '#type' => 'container',
+    '#tree' => TRUE,
+  ];
+
+  // Vertical tabs DANS notre conteneur
+  $form['lightgallery_settings_ui']['settings_tabs'] = [
+    '#type' => 'vertical_tabs',
+    '#weight' => 10,
+  ];
+
+  // Core settings.
+  $form['lightgallery_settings_ui']['advanced_core'] = [
+    '#type' => 'details',
+    '#title' => t('Advanced Core Settings'),
+    '#description' => t('Advanced LightGallery core parameters.'),
+    '#group' => 'lightgallery_settings_ui][settings_tabs',
+    '#tree' => TRUE,
+  ];
+
+
+  $form['lightgallery_settings_ui']['advanced_core'] += $trait_user->publicBuildCoreSettingsForm(
+    $definitions,
+    $config,
+    ['lightgallery_settings_ui', 'advanced_core']
+  );
+
+  // Plugin settings.
+  $form['lightgallery_settings_ui']['plugins'] = [
+    '#type' => 'details',
+    '#title' => t('LightGallery Plugins'),
+    '#description' => t('Configure the LightGallery plugins.'),
+    '#group' => 'lightgallery_settings_ui][settings_tabs',
+    '#tree' => TRUE,
+
+  ];
+
+  $form['lightgallery_settings_ui']['plugins'] += $trait_user->publicBuildPluginSettingsForm(
+    $definitions,
+    $config,
+    ['lightgallery_settings_ui', 'plugins']
+  );
+
+
+  // Ajouter notre submit handler
+  // array_unshift($form['#submit'], 'lightgallery_settings_ui_form_lightgallery_settings_form_submit');
+  array_unshift($form['#validate'], 'lightgallery_settings_ui_form_lightgallery_settings_form_validate');
+}
+
+
+function lightgallery_settings_ui_form_lightgallery_settings_form_validate(&$form, FormStateInterface $form_state) {
+  \Drupal::logger('lightgallery_settings_ui')->info('Validation handler called - saving our settings and removing them from form');
+
+  // 1. Sauvegarder NOS paramètres avancés dans NOTRE configuration
+  $config = \Drupal::configFactory()->getEditable('lightgallery_settings_ui.settings');
+
+  $values = $form_state->getValues();
+
+  // Debug: voir ce qu'on reçoit
+  \Drupal::logger('lightgallery_settings_ui')->info('Form values keys: @keys', [
+    '@keys' => print_r(array_keys($values), TRUE)
+  ]);
+
+  // Save advanced core settings to OUR configuration
+  if (isset($values['lightgallery_settings_ui']['advanced_core']['core'])) {
+    $config->set('core', $values['lightgallery_settings_ui']['advanced_core']['core']);
+    \Drupal::logger('lightgallery_settings_ui')->info('Saving core settings to lightgallery_settings_ui.settings');
+  }
+
+  // Save plugins settings to OUR configuration
+  if (isset($values['lightgallery_settings_ui']['plugins'])) {
+    $config->set('plugins', $values['lightgallery_settings_ui']['plugins']);
+    \Drupal::logger('lightgallery_settings_ui')->info('Saving plugins settings to lightgallery_settings_ui.settings');
+  }
+
+  // Sauvegarder NOTRE configuration
+  $config->save();
+  \Drupal::logger('lightgallery_settings_ui')->info('Advanced LightGallery settings saved to lightgallery_settings_ui.settings');
+
+  // 2. SUPPRIMER nos champs des valeurs du formulaire
+  $form_state->unsetValue('lightgallery_settings_ui');
+
+// 3. NETTOYER les config_targets si ils existent
+  $storage = $form_state->getStorage();
+  if (isset($storage['config_targets'])) {
+    $keys_to_remove = [];
+    foreach ($storage['config_targets']['lightgallery.settings'] as $key => $target) {
+      if ($target[0] === 'lightgallery_settings_ui') {
+        $keys_to_remove[] = $key;
+      }
+    }
+    foreach ($keys_to_remove as $key) {
+      unset($storage['config_targets']['lightgallery.settings'][$key]);
+    }
+    $form_state->setStorage($storage);
+  }
+
+  \Drupal::logger('lightgallery_settings_ui')->info('Removed our fields (advanced_core, plugins, settings_tabs) from form values');
+
+  // 3. Vérifier que nos champs ont bien été supprimés
+  $remaining_values = $form_state->getValues();
+  \Drupal::logger('lightgallery_settings_ui')->info('Remaining values after removal: @keys', [
+    '@keys' => print_r(array_keys($remaining_values), TRUE)
+  ]);
+
+  \Drupal::messenger()->addStatus(t('Advanced LightGallery settings have been saved.'));
+}
+
+/**
+ * Implements hook_field_formatter_third_party_settings_form().
+ */
+function lightgallery_settings_ui_field_formatter_third_party_settings_form($plugin, $field_definition, $view_mode, $form, $form_state) {
+  $element = [];
+
+  // Only add settings for LightGallery formatters.
+  if (strpos($plugin->getPluginId(), 'lightgallery') === FALSE) {
+    return $element;
+  }
+
+  // Use the trait to build the settings form.
+  $trait_user = new class {
+    use LightGallerySettingsTrait;
+
+    // Rendre les méthodes protected accessibles
+    public function publicBuildCoreSettingsForm($definitions, $config, $parents) {
+      return $this->buildCoreSettingsForm($definitions, $config, $parents);
+    }
+
+    public function publicBuildPluginSettingsForm($definitions, $config, $parents) {
+      return $this->buildPluginSettingsForm($definitions, $config, $parents);
+    }
+
+    public function t($string, array $args = []) {
+      return t($string, $args);
+    }
+  };
+
+  $config = \Drupal::config('lightgallery_settings_ui.settings');
+  $third_party_settings = $plugin->getThirdPartySetting('lightgallery_settings_ui', 'settings', []);
+
+  // Merge global and field-specific settings.
+  $global_core = $config->get('core.params') ?? [];
+  $global_plugins = $config->get('plugins') ?? [];
+
+  $entity_core = $third_party_settings['core']['params'] ?? [];
+  $entity_plugins = $third_party_settings['plugins'] ?? [];
+
+  $core_effective = array_replace_recursive($global_core, $entity_core);
+  $plugins_effective = array_replace_recursive($global_plugins, $entity_plugins);
+
+  $final_config = [
+    'core' => [
+      'params' => $core_effective,
+    ],
+    'plugins' => $plugins_effective,
+  ];
+
+  $parents = [
+    'fields',
+    $field_definition->getName(),
+    'settings_edit_form',
+    'third_party_settings',
+    'lightgallery_settings_ui',
+    'settings',
+  ];
+
+  $element['settings'] = [
+    '#type' => 'details',
+    '#title' => t('LightGallery advanced settings'),
+    '#description' => t('Override global LightGallery settings for this field. Leave empty to use global defaults.'),
+    '#open' => FALSE,
+    '#tree' => TRUE,
+  ];
+
+  // Core settings.
+  $element['settings']['core'] = $trait_user->publicBuildCoreSettingsForm(
+    $trait_user::getLightGalleryPluginDefinitions(),
+    $final_config,
+    array_merge($parents, ['core'])
+  );
+
+  // Plugin settings.
+  $element['settings']['plugins'] = [
+    '#type' => 'details',
+    '#title' => t('Plugins'),
+    '#open' => TRUE,
+    '#tree' => TRUE,
+  ];
+
+  $element['settings']['plugins'] += $trait_user->publicBuildPluginSettingsForm(
+    $trait_user::getLightGalleryPluginDefinitions(),
+    $final_config,
+    array_merge($parents, ['plugins'])
+  );
+
+  return $element;
+}
+
+/**
+ * Implements hook_preprocess_HOOK() for lightgallery template.
+ */
+function lightgallery_settings_ui_preprocess_lightgallery(&$variables) {
+  // Merge settings from configuration into the render array.
+  if (empty($variables['settings'])) {
+    $variables['settings'] = [];
+  }
+
+  $config = \Drupal::config('lightgallery_settings_ui.settings');
+  $global_settings = LightGallerySettingsTrait::getGeneralSettings([
+    'lightgallery_settings' => [
+      'core' => $config->get('core') ?? [],
+      'plugins' => $config->get('plugins') ?? [],
+    ],
+  ]);
+
+  // Global settings as defaults, can be overridden by $variables['settings'].
+  $variables['settings'] = array_merge($global_settings, $variables['settings']);
+}
+
+/**
+ * Implements hook_library_info_alter().
+ */
+function lightgallery_settings_ui_library_info_alter(&$libraries, $extension) {
+  if ($extension !== 'lightgallery') {
+    return;
+  }
+
+  // Add our CSS for the settings UI if needed.
+  if (isset($libraries['lightgallery'])) {
+    $libraries['lightgallery']['css']['theme']['/' . \Drupal::service('extension.list.module')->getPath('lightgallery_settings_ui') . '/css/lightgallery-settings.css'] = [];
+  }
+}
+

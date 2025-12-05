@@ -1,0 +1,167 @@
+lightgallery_settings_ui.settings:
+  type: config_object
+  label: LightGallery Settings UI Configuration
+  mapping:
+    core:
+      type: mapping
+      label: Core settings
+      mapping:
+        params:
+          type: mapping
+          label: Core parameters
+          mapping:
+            addClass:
+              type: string
+              label: Additional class
+            allowMediaOverlap:
+              type: boolean
+              label: Allow media overlap
+            appendCounterTo:
+              type: string
+              label: Append counter to
+            appendSubHtmlTo:
+              type: string
+              label: Append sub HTML to
+            closable:
+              type: boolean
+              label: Closable
+            closeOnTap:
+              type: boolean
+              label: Close on tap
+            controls:
+              type: boolean
+              label: Controls
+            counter:
+              type: boolean
+              label: Counter
+            download:
+              type: boolean
+              label: Download
+            easing:
+              type: string
+              label: Easing
+            enableDrag:
+              type: boolean
+              label: Enable drag
+            enableSwipe:
+              type: boolean
+              label: Enable swipe
+            escapeKey:
+              type: boolean
+              label: Escape key
+            isMobile:
+              type: boolean
+              label: Is mobile
+            keyPress:
+              type: boolean
+              label: Key press
+            loadYoutubePoster:
+              type: boolean
+              label: Load YouTube poster
+            loop:
+              type: boolean
+              label: Loop
+            mode:
+              type: string
+              label: Mode
+            mousewheel:
+              type: boolean
+              label: Mouse wheel
+            nextHtml:
+              type: string
+              label: Next HTML
+            prevHtml:
+              type: string
+              label: Previous HTML
+            preload:
+              type: integer
+              label: Preload
+            showCloseIcon:
+              type: boolean
+              label: Show close icon
+            swipeThreshold:
+              type: integer
+              label: Swipe threshold
+            swipeToClose:
+              type: boolean
+              label: Swipe to close
+            zoomFromOrigin:
+              type: boolean
+              label: Zoom from origin
+    plugins:
+      type: mapping
+      label: Plugin settings
+      mapping:
+        zoom:
+          type: mapping
+          label: Zoom plugin
+          mapping:
+            enabled:
+              type: boolean
+              label: Enable Zoom
+            params:
+              type: mapping
+              label: Zoom options
+              mapping:
+                actualSize:
+                  type: boolean
+                  label: Show actual size
+                scale:
+                  type: float
+                  label: Zoom scale
+        thumbnail:
+          type: mapping
+          label: Thumbnails plugin
+          mapping:
+            enabled:
+              type: boolean
+              label: Enable Thumbnails
+            params:
+              type: mapping
+              label: Thumbnails options
+              mapping:
+                toggleThumb:
+                  type: boolean
+                  label: Toggle thumbnails
+        video:
+          type: mapping
+          label: Video plugin
+          mapping:
+            enabled:
+              type: boolean
+              label: Enable Video
+            params:
+              type: mapping
+              label: Video options
+              mapping:
+                autoplayFirstVideo:
+                  type: boolean
+                  label: Autoplay first video
+        autoplay:
+          type: mapping
+          label: Autoplay plugin
+          mapping:
+            enabled:
+              type: boolean
+              label: Enable Autoplay
+            params:
+              type: mapping
+              label: Autoplay options
+              mapping:
+                slideShowDelay:
+                  type: integer
+                  label: Slideshow delay
+        fullscreen:
+          type: mapping
+          label: Fullscreen plugin
+          mapping:
+            enabled:
+              type: boolean
+              label: Enable Fullscreen
+        pager:
+          type: mapping
+          label: Pager plugin
+          mapping:
+            enabled:
+              type: boolean
+              label: Enable Pager

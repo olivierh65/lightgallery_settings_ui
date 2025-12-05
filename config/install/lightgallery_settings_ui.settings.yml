@@ -1,0 +1,56 @@
+core:
+  params:
+    addClass: ''
+    allowMediaOverlap: false
+    appendCounterTo: '.lg-toolbar'
+    appendSubHtmlTo: '.lg-sub-html'
+    closable: true
+    closeOnTap: true
+    controls: true
+    counter: true
+    download: true
+    easing: 'ease'
+    enableDrag: true
+    enableSwipe: true
+    escapeKey: true
+    isMobile: false
+    keyPress: true
+    loadYoutubePoster: true
+    loop: false
+    mode: 'lg-slide'
+    mousewheel: false
+    nextHtml: ''
+    prevHtml: ''
+    preload: 2
+    showCloseIcon: true
+    swipeThreshold: 50
+    swipeToClose: true
+    zoomFromOrigin: true
+
+plugins:
+  zoom:
+    enabled: true
+    params:
+      actualSize: true
+      scale: 1
+
+  thumbnail:
+    enabled: true
+    params:
+      toggleThumb: true
+
+  video:
+    enabled: true
+    params:
+      autoplayFirstVideo: false
+
+  autoplay:
+    enabled: false
+    params:
+      slideShowDelay: 5000
+
+  fullscreen:
+    enabled: true
+
+  pager:
+    enabled: false

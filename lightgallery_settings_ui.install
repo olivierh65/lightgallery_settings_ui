@@ -1,0 +1,53 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for lightgallery_settings_ui.
+ */
+
+/**
+ * Implements hook_install().
+ */
+function lightgallery_settings_ui_install() {
+  $config_factory = \Drupal::configFactory();
+  
+  // Check if there's an old lightgallery.settings config to migrate.
+  $old_config = $config_factory->get('lightgallery.settings');
+  $new_config = $config_factory->getEditable('lightgallery_settings_ui.settings');
+  
+  // Migrate old flat license_key structure.
+  if ($old_config->get('license_key') && !$new_config->get('core')) {
+    $license_key = $old_config->get('license_key');
+    
+    // Load default configuration.
+    $module_path = \Drupal::service('extension.list.module')->getPath('lightgallery_settings_ui');
+    $yaml_content = file_get_contents($module_path . '/config/install/lightgallery_settings_ui.settings.yml');
+    $config_data = \Drupal::service('serialization.yaml')->decode($yaml_content);
+    
+    // Set the migrated license key.
+    $config_data['core']['params']['licenseKey'] = $license_key;
+    
+    // Save to the new config.
+    $new_config->setData($config_data)->save();
+    
+    \Drupal::messenger()->addStatus(t('LightGallery settings have been migrated to lightgallery_settings_ui.settings.'));
+  }
+  // Migrate existing hierarchical structure from lightgallery.settings.
+  elseif ($old_config->get('core') && !$new_config->get('core')) {
+    $new_config->setData([
+      'core' => $old_config->get('core'),
+      'plugins' => $old_config->get('plugins'),
+    ])->save();
+    
+    \Drupal::messenger()->addStatus(t('LightGallery settings have been imported to lightgallery_settings_ui.settings.'));
+  }
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function lightgallery_settings_ui_uninstall() {
+  // Configuration is intentionally NOT deleted on uninstall
+  // to preserve settings if the module is reinstalled.
+  // To delete: drush config:delete lightgallery_settings_ui.settings
+}

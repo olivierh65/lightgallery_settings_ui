@@ -1,0 +1,4 @@
+# This file is intentionally empty.
+# The lightgallery_settings_ui module uses the existing
+# 'configure lightgallery' permission from the lightgallery module.
+# No additional permission is needed.

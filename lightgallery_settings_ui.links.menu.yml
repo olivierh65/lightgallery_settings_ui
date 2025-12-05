@@ -1,0 +1,4 @@
+# This file is intentionally empty.
+# The lightgallery_settings_ui module extends the existing
+# lightgallery settings form via hook_form_alter().
+# No separate menu link is needed.

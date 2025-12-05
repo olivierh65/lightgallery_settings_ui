@@ -1,0 +1,7 @@
+name: 'LightGallery Settings UI'
+type: module
+description: 'Provides an advanced user interface for configuring LightGallery settings globally and per field formatter.'
+core_version_requirement: ^10 || ^11
+package: Media
+dependencies:
+  - lightgallery:lightgallery
