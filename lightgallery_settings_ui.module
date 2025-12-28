@@ -211,7 +211,7 @@ function lightgallery_settings_ui_field_formatter_third_party_settings_form($plu
 
   // Core settings.
   $element['settings']['core'] = $trait_user->publicBuildCoreSettingsForm(
-    $trait_user::getLightGalleryPluginDefinitions(),
+    \Drupal\lightgallery_settings_ui\LightGallerySettingsHelper::getLightGalleryPluginDefinitions(),
     $final_config,
     array_merge($parents, ['core'])
   );
@@ -225,7 +225,7 @@ function lightgallery_settings_ui_field_formatter_third_party_settings_form($plu
   ];
 
   $element['settings']['plugins'] += $trait_user->publicBuildPluginSettingsForm(
-    $trait_user::getLightGalleryPluginDefinitions(),
+    \Drupal\lightgallery_settings_ui\LightGallerySettingsHelper::getLightGalleryPluginDefinitions(),
     $final_config,
     array_merge($parents, ['plugins'])
   );
@@ -243,7 +243,7 @@ function lightgallery_settings_ui_preprocess_lightgallery(&$variables) {
   }
 
   $config = \Drupal::config('lightgallery_settings_ui.settings');
-  $global_settings = LightGallerySettingsTrait::getGeneralSettings([
+  $global_settings = \Drupal\lightgallery_settings_ui\LightGallerySettingsHelper::getGeneralSettings([
     'lightgallery_settings' => [
       'core' => $config->get('core') ?? [],
       'plugins' => $config->get('plugins') ?? [],
