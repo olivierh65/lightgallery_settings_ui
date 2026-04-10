@@ -306,7 +306,7 @@ class LightGallerySettingsHelper {
     $core_settings = $all_settings['lightgallery_settings']['core']['params'] ?? [];
 
     $core_global_settings = \Drupal::config('lightgallery_settings_ui.settings')->get('core') ?? [];
-    foreach (($core_settings + $core_global_settings['params']) as $key => $value) {
+    foreach (array_merge($core_settings, $core_global_settings['params'] ?? []) as $key => $value) {
       if (isset($core_settings_def[$key]['#access']) && $core_settings_def[$key]['#access'] === FALSE) {
         continue;
       }
